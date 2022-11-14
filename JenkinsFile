@@ -1,0 +1,48 @@
+import groovy.json.JsonOutput
+
+def notifySlack() {
+    def slackURL = 'ENTER SLACK URL'
+    def slackBuildMessage = "Build ${env.BUILD_NUMBER} of ${env.JOB_NAME} finished with status: ${currentBuild.currentResult}. For full details go to: ${env.BUILD_URL}"
+    def payload = JsonOutput.toJson([text : slackBuildMessage,
+                                 channel : "demo",
+                                 username : "jenkins"])
+    sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
+}
+
+node() {
+    try {
+        stage('Preparation') { // for display purposes
+            echo 'Preparation stage output'
+            // Get some code from a GitHub repository
+            git branch: '${GIT_BRANCH}', url: 'https://github.com/jlozowicki/jenkins-demo.git'
+        }
+        stage('Build') {
+            echo 'Build stage output'
+            //sh 'ls -lah'
+            sh 'echo "Running python script on $NODE_NAME";python script.py'
+            git branch: '${GIT_BRANCH}', url: 'https://github.com/jlozowicki/jenkins-asdf.git'
+        }
+    } catch(error) {
+        currentBuild.result = "FAILURE"
+    }
+    stage('Cleanup') {
+        cleanWs()
+        // mail bcc: '', body: 'Build ${env.BUILD_NUMBER} of ${env.JOB_NAME} finished with status: ${currentBuild.currentResult}. For full details go to: ${env.BUILD_URL}', cc: '', from: 'jlozowicki@gmail.com', replyTo: '', subject: 'Build completed', to: 'jlozowick@gmail.com'
+        notifySlack()
+    }
+}
+/*node('ubuntu') {
+    stage('Preparation') { // for display purposes
+        echo 'Preparation stage output'
+        // Get some code from a GitHub repository
+        git branch: '${GIT_BRANCH}', url: 'https://github.com/jlozowicki/jenkins-demo.git'
+    }
+    stage('Build') {
+        echo 'Build stage output'
+        //sh 'ls -lah'
+        
+        sh 'echo "Running python script on $NODE_NAME";python script.py'
+    }
+    cleanWs()
+    // step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: 'jlozowicki@gmail.com', sendToIndividuals: false])
+} */
