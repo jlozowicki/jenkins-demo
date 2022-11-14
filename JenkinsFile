@@ -9,7 +9,7 @@ def notifySlack() {
     sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slackURL}"
 }
 
-node() {
+node("${AGENT}") {
     try {
         stage('Preparation') { // for display purposes
             echo 'Preparation stage output'
@@ -31,18 +31,3 @@ node() {
         notifySlack()
     }
 }
-/*node('ubuntu') {
-    stage('Preparation') { // for display purposes
-        echo 'Preparation stage output'
-        // Get some code from a GitHub repository
-        git branch: '${GIT_BRANCH}', url: 'https://github.com/jlozowicki/jenkins-demo.git'
-    }
-    stage('Build') {
-        echo 'Build stage output'
-        //sh 'ls -lah'
-        
-        sh 'echo "Running python script on $NODE_NAME";python script.py'
-    }
-    cleanWs()
-    // step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: 'jlozowicki@gmail.com', sendToIndividuals: false])
-} */
